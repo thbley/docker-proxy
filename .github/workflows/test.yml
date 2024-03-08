@@ -23,8 +23,11 @@ jobs:
         free
         lsb_release -a
 
-    - name: Build container
+    - name: Build php container
       run: docker build -t redistest .
+
+    - name: Pull redis container
+      run: docker pull redis:7.2-alpine
 
     - name: Docker ps
       run: docker ps
