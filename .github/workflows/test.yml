@@ -16,7 +16,9 @@ jobs:
 
     - name: Check environment
       run: |
-        docker version && docker buildx version
+        docker version
+        docker buildx version
+        docker info
         cat /proc/cpuinfo
         free
         lsb_release -a
