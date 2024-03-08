@@ -1,0 +1,45 @@
+name: build
+
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    name: Tests
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check environment
+      run: |
+        docker version && docker buildx version
+        cat /proc/cpuinfo
+        free
+        lsb_release -a
+
+    - name: Build container
+      run: docker build -t redistest .
+
+    - name: Docker ps
+      run: docker ps
+
+    - name: Test redis with network host
+      run: |
+        docker run --rm -it --network host --name redis -d redis:7.2-alpine
+        sleep 5
+        time docker run --rm -it --network host -v$(pwd):/var/www redistest php test.php
+        docker stop redis
+
+    - name: Docker ps
+      run: docker ps
+
+    - name: Test redis with docker proxy (timeout error)
+      run: |
+        docker run --rm -it --name redis -d -p 6379:6379 redis:7.2-alpine
+        sleep 5
+        time docker run --rm -it --network host -v$(pwd):/var/www redistest php test.php
+        docker stop redis
