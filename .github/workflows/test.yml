@@ -22,6 +22,7 @@ jobs:
         cat /proc/cpuinfo
         free
         lsb_release -a
+        cat /etc/docker/daemon.json
 
     - name: Build php container
       run: docker build -t redistest .
@@ -41,6 +42,25 @@ jobs:
 
     - name: Docker ps
       run: docker ps
+
+    - name: Disable userland proxy in docker daemon
+      run: |
+        sudo jq '.+{"userland-proxy":false}' /etc/docker/daemon.json > /tmp/daemon.json
+        sudo mv /tmp/daemon.json /etc/docker/daemon.json
+        sudo systemctl restart docker.service
+
+    - name: Test redis with bridged network and docker proxy disabled
+      run: |
+        docker run --rm --name redis -d -p 6379:6379 redis:7.2-alpine
+        sleep 5
+        time docker run --rm --network host -v$(pwd):/var/www redistest php test.php
+        docker stop redis
+
+    - name: Enable userland proxy in docker daemon
+      run: |
+        sudo jq '.+{"userland-proxy":true}' /etc/docker/daemon.json > /tmp/daemon.json
+        sudo mv /tmp/daemon.json /etc/docker/daemon.json
+        sudo systemctl restart docker.service
 
     - name: Test redis with docker proxy (timeout error)
       run: |

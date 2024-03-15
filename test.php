@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 class Test {
     public function connect() {
         $redis = new Redis();
-        $redis->connect('127.0.0.1', 6379, 3, null, 100, 0, ['auth' => ['foo', 'bar']]);
+	$redis->connect('127.0.0.1', 6379, 3);
         $redis->close();
     }
 }
